@@ -8,14 +8,28 @@ interface ISignUpControllerTypes {
   emailValidatorStub: IEmailValidator;
 }
 
-const makeSignUpController = (): ISignUpControllerTypes => {
+const makeEmailValidator = (): IEmailValidator => {
   class EmailValidatorStub implements IEmailValidator {
     public isValid(): boolean {
       return true;
     }
   }
 
-  const emailValidatorStub = new EmailValidatorStub();
+  return new EmailValidatorStub();
+};
+
+const makeEmailValidatorWithError = (): IEmailValidator => {
+  class EmailValidatorStub implements IEmailValidator {
+    public isValid(): boolean {
+      throw new Error();
+    }
+  }
+
+  return new EmailValidatorStub();
+};
+
+const makeSignUpController = (): ISignUpControllerTypes => {
+  const emailValidatorStub = makeEmailValidator();
   const signUpController = new SignUpController(emailValidatorStub);
 
   return {
@@ -135,13 +149,7 @@ describe('SignUp Controller', () => {
   });
 
   test('should return 500 if EmailValidator throws', () => {
-    class EmailValidatorStub implements IEmailValidator {
-      public isValid(): boolean {
-        throw new Error();
-      }
-    }
-
-    const emailValidatorStub = new EmailValidatorStub();
+    const emailValidatorStub = makeEmailValidatorWithError();
     const signUpController = new SignUpController(emailValidatorStub);
 
     const httpRequest = {
