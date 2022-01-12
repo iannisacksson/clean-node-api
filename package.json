@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --passWithNoTests --watch",
-    "test:staged": "jest --passWithNoTests"
+    "test": "jest --watchAll",
+    "test:staged": "jest --passWithNoTests",
+    "prepare": "husky install",
+    "lint": "eslint 'src/**' --fix"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +27,6 @@
     "git-commit-msg-linter": "^3.3.3",
     "husky": "^7.0.4",
     "jest": "^27.4.7",
-    "lint-staged": "^12.1.7",
     "prettier": "^2.5.1",
     "ts-jest": "^27.1.2",
     "ts-node": "^10.4.0",
