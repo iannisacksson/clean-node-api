@@ -1,13 +1,32 @@
+import { InvalidParamError } from '../errors/invalid-param-error';
 import { MissingParamError } from '../errors/missing-param-error';
+import { IEmailValidator } from '../protocols/email-validator';
 import { SignUpController } from './signup';
 
-const makeSignUpController = (): SignUpController => {
-  return new SignUpController();
+interface ISignUpControllerTypes {
+  signUpController: SignUpController;
+  emailValidatorStub: IEmailValidator;
+}
+
+const makeSignUpController = (): ISignUpControllerTypes => {
+  class EmailValidatorStub implements IEmailValidator {
+    public isValid(): boolean {
+      return true;
+    }
+  }
+
+  const emailValidatorStub = new EmailValidatorStub();
+  const signUpController = new SignUpController(emailValidatorStub);
+
+  return {
+    signUpController,
+    emailValidatorStub,
+  };
 };
 
 describe('SignUp Controller', () => {
   test('should return 400 if no name is provided', () => {
-    const signUpController = makeSignUpController();
+    const { signUpController } = makeSignUpController();
 
     const httpRequest = {
       body: {
@@ -24,7 +43,7 @@ describe('SignUp Controller', () => {
   });
 
   test('should return 400 if no email is provided', () => {
-    const signUpController = makeSignUpController();
+    const { signUpController } = makeSignUpController();
 
     const httpRequest = {
       body: {
@@ -41,7 +60,7 @@ describe('SignUp Controller', () => {
   });
 
   test('should return 400 if no password is provided', () => {
-    const signUpController = makeSignUpController();
+    const { signUpController } = makeSignUpController();
 
     const httpRequest = {
       body: {
@@ -58,7 +77,7 @@ describe('SignUp Controller', () => {
   });
 
   test('should return 400 if no password confirmation is provided', () => {
-    const signUpController = makeSignUpController();
+    const { signUpController } = makeSignUpController();
 
     const httpRequest = {
       body: {
@@ -74,5 +93,25 @@ describe('SignUp Controller', () => {
     expect(httpResponse.body).toEqual(
       new MissingParamError('passwordConfirmation'),
     );
+  });
+
+  test('should return 400 if an invalid email is provided', () => {
+    const { signUpController, emailValidatorStub } = makeSignUpController();
+
+    jest.spyOn(emailValidatorStub, 'isValid').mockReturnValueOnce(false);
+
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'invalid_email@mail.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password',
+      },
+    };
+
+    const httpResponse = signUpController.handle(httpRequest);
+
+    expect(httpResponse.statusCode).toBe(400);
+    expect(httpResponse.body).toEqual(new InvalidParamError('email'));
   });
 });
