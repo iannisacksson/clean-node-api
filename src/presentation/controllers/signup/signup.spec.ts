@@ -10,7 +10,7 @@ import {
   ServerError,
 } from '../../errors';
 import { SignUpController } from './signup';
-import { IAccountModel } from '../../domain/models/account';
+import { IAccountModel } from '../../../domain/models/account';
 
 interface ISignUpControllerTypes {
   signUpController: SignUpController;
