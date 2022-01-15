@@ -1,4 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
+import { IAccountModel } from '../domain/models/account';
+import { IAddAccount, IAddAccountModel } from '../domain/usecases/add-account';
 import { InvalidParamError, MissingParamError, ServerError } from '../errors';
 import { IEmailValidator } from '../protocols';
 import { SignUpController } from './signup';
@@ -6,6 +8,7 @@ import { SignUpController } from './signup';
 interface ISignUpControllerTypes {
   signUpController: SignUpController;
   emailValidatorStub: IEmailValidator;
+  addAccountStub: IAddAccount;
 }
 
 const makeEmailValidator = (): IEmailValidator => {
@@ -18,13 +21,36 @@ const makeEmailValidator = (): IEmailValidator => {
   return new EmailValidatorStub();
 };
 
+const makeAddAccount = (): IAddAccount => {
+  class AddAccountStub implements IAddAccount {
+    public add({ email, name, password }: IAddAccountModel): IAccountModel {
+      const fakeAccount = {
+        id: 'valid_id',
+        name,
+        email,
+        password,
+      };
+
+      return fakeAccount;
+    }
+  }
+
+  return new AddAccountStub();
+};
+
 const makeSignUpController = (): ISignUpControllerTypes => {
   const emailValidatorStub = makeEmailValidator();
-  const signUpController = new SignUpController(emailValidatorStub);
+  const addAccountStub = makeAddAccount();
+
+  const signUpController = new SignUpController(
+    emailValidatorStub,
+    addAccountStub,
+  );
 
   return {
     signUpController,
     emailValidatorStub,
+    addAccountStub,
   };
 };
 
@@ -178,5 +204,28 @@ describe('SignUp Controller', () => {
 
     expect(httpResponse.statusCode).toBe(500);
     expect(httpResponse.body).toEqual(new ServerError());
+  });
+
+  test('should call AddAccount with correct values', () => {
+    const { signUpController, addAccountStub } = makeSignUpController();
+
+    const addSpy = jest.spyOn(addAccountStub, 'add');
+
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'invalid_email@mail.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password',
+      },
+    };
+
+    signUpController.handle(httpRequest);
+
+    expect(addSpy).toHaveBeenCalledWith({
+      name: 'any_name',
+      email: 'invalid_email@mail.com',
+      password: 'any_password',
+    });
   });
 });
