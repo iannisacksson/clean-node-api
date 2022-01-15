@@ -235,4 +235,26 @@ describe('SignUp Controller', () => {
       password: 'any_password',
     });
   });
+
+  test('should return 500 if AddAccount throws', () => {
+    const { signUpController, addAccountStub } = makeSignUpController();
+
+    jest.spyOn(addAccountStub, 'add').mockImplementationOnce(() => {
+      throw new Error();
+    });
+
+    const httpRequest = {
+      body: {
+        name: 'any_name',
+        email: 'invalid_email@mail.com',
+        password: 'any_password',
+        passwordConfirmation: 'any_password',
+      },
+    };
+
+    const httpResponse = signUpController.handle(httpRequest);
+
+    expect(httpResponse.statusCode).toBe(500);
+    expect(httpResponse.body).toEqual(new ServerError());
+  });
 });
