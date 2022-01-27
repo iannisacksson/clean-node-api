@@ -26,6 +26,7 @@
         "import/no-unresolved": "error",
         "no-restricted-syntax": "off",
         "@typescript-eslint/no-explicit-any": "off",
+        "max-classes-per-file": "off",
         "@typescript-eslint/naming-convention": [
             "error",
             {
