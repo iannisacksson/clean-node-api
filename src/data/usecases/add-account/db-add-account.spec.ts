@@ -1,9 +1,14 @@
-import { IEncrypter } from './db-add-account-protocols';
+import {
+  IAccountModel,
+  IEncrypter,
+  IAddAccountRepository,
+} from './db-add-account-protocols';
 import { DbAddAccount } from './db-add-account';
 
 interface ISutTypes {
   dbAddAccount: DbAddAccount;
   encrypterStub: IEncrypter;
+  addAccountRepositoryStub: IAddAccountRepository;
 }
 
 const makeEncrypter = (): IEncrypter => {
@@ -16,11 +21,33 @@ const makeEncrypter = (): IEncrypter => {
   return new EncrypterStub();
 };
 
+const makeAddAccountRepository = (): IAddAccountRepository => {
+  class AddAccountRepositoryStub implements IAddAccountRepository {
+    async add(): Promise<IAccountModel> {
+      const fakeAccount = {
+        id: 'valid_id',
+        name: 'valid_name',
+        email: 'valid_email',
+        password: 'valid_password',
+      };
+
+      return fakeAccount;
+    }
+  }
+
+  return new AddAccountRepositoryStub();
+};
+
 const makeDbAddAccount = (): ISutTypes => {
   const encrypterStub = makeEncrypter();
-  const dbAddAccount = new DbAddAccount(encrypterStub);
+  const addAccountRepositoryStub = makeAddAccountRepository();
 
-  return { encrypterStub, dbAddAccount };
+  const dbAddAccount = new DbAddAccount(
+    encrypterStub,
+    addAccountRepositoryStub,
+  );
+
+  return { encrypterStub, dbAddAccount, addAccountRepositoryStub };
 };
 
 describe('DbAddAccount UseCase', () => {
@@ -56,5 +83,25 @@ describe('DbAddAccount UseCase', () => {
     const promise = dbAddAccount.add(accountData);
 
     await expect(promise).rejects.toThrow();
+  });
+
+  test('Should call AddAccountRepository with correct values', async () => {
+    const { dbAddAccount, addAccountRepositoryStub } = makeDbAddAccount();
+
+    const addSpy = jest.spyOn(addAccountRepositoryStub, 'add');
+
+    const accountData = {
+      name: 'valid_name',
+      email: 'valid_email',
+      password: 'valid_password',
+    };
+
+    await dbAddAccount.add(accountData);
+
+    expect(addSpy).toHaveBeenCalledWith({
+      name: 'valid_name',
+      email: 'valid_email',
+      password: 'hashed_password',
+    });
   });
 });
