@@ -24,6 +24,7 @@
         "prettier/prettier": "error",
         "camelcase": "off",
         "import/no-unresolved": "error",
+        "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
         "no-restricted-syntax": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "max-classes-per-file": "off",
