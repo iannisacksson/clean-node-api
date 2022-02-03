@@ -12,7 +12,9 @@ class LogControllerDecorator implements IController {
   }
 
   public async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
-    return this.controller.handle(httpRequest);
+    const httpResponse = await this.controller.handle(httpRequest);
+
+    return httpResponse;
   }
 }
 
