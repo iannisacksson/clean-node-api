@@ -52,7 +52,7 @@ class SignUpController implements IController {
 
       return ok(account);
     } catch (error) {
-      return serverError();
+      return serverError(error);
     }
   }
 }
