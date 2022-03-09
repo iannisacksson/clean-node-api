@@ -1,34 +1,73 @@
-import { IController, IHttpResponse } from '../../presentation/protocols';
+import {
+  IController,
+  IHttpRequest,
+  IHttpResponse,
+} from '../../presentation/protocols';
 import { LogControllerDecorator } from './log';
+import { serverError, ok } from '../../presentation/helpers/http-helper';
+import { ILogErrorRepository } from '../../data/protocols/log-error-repository';
+import { IAccountModel } from '../../domain/models/account';
 
 interface ISutTypes {
   logControllerDecorator: LogControllerDecorator;
   controllerStub: IController;
+  logErrorRepositoryStub: ILogErrorRepository;
 }
+
+const makeFakeAccount = (): IAccountModel => ({
+  id: 'valid_id',
+  name: 'any_name',
+  email: 'invalid_email@mail.com',
+  password: 'any_password',
+});
+
+const makeFakeServerError = (): IHttpResponse => {
+  const fakeError = new Error();
+
+  fakeError.stack = 'any_stack';
+
+  return serverError(fakeError);
+};
 
 const makeController = (): IController => {
   class ControllerStub implements IController {
     public async handle(): Promise<IHttpResponse> {
-      const httpResponse: IHttpResponse = {
-        statusCode: 200,
-        body: {
-          name: 'João',
-        },
-      };
-
-      return httpResponse;
+      return ok(makeFakeAccount());
     }
   }
 
   return new ControllerStub();
 };
 
+const makeLogErrorRepository = (): ILogErrorRepository => {
+  class LogErrorRepositoryStub implements ILogErrorRepository {
+    public async log(): Promise<void> {
+      return null;
+    }
+  }
+
+  return new LogErrorRepositoryStub();
+};
+
+const makeFakeRequest = (): IHttpRequest => ({
+  body: {
+    name: 'any_name',
+    email: 'invalid_email@mail.com',
+    password: 'any_password',
+    passwordConfirmation: 'any_password',
+  },
+});
+
 const makeLogControllerDecorator = (): ISutTypes => {
   const controllerStub = makeController();
+  const logErrorRepositoryStub = makeLogErrorRepository();
 
-  const logControllerDecorator = new LogControllerDecorator(controllerStub);
+  const logControllerDecorator = new LogControllerDecorator(
+    controllerStub,
+    logErrorRepositoryStub,
+  );
 
-  return { logControllerDecorator, controllerStub };
+  return { logControllerDecorator, controllerStub, logErrorRepositoryStub };
 };
 
 describe('Log Controller Decorator', () => {
@@ -38,39 +77,33 @@ describe('Log Controller Decorator', () => {
 
     const handleSpy = jest.spyOn(controllerStub, 'handle');
 
-    const httpRequest = {
-      body: {
-        name: 'any_name',
-        email: 'any_email@mail.com',
-        password: 'any_password',
-        passwordConfirmation: 'any_password',
-      },
-    };
+    await logControllerDecorator.handle(makeFakeRequest());
 
-    await logControllerDecorator.handle(httpRequest);
-
-    expect(handleSpy).toHaveBeenCalledWith(httpRequest);
+    expect(handleSpy).toHaveBeenCalledWith(makeFakeRequest());
   });
 
   test('Should return the same result of the controller', async () => {
     const { logControllerDecorator } = makeLogControllerDecorator();
 
-    const httpRequest = {
-      body: {
-        name: 'any_name',
-        email: 'any_email@mail.com',
-        password: 'any_password',
-        passwordConfirmation: 'any_password',
-      },
-    };
+    const httpResponse = await logControllerDecorator.handle(makeFakeRequest());
 
-    const httpResponse = await logControllerDecorator.handle(httpRequest);
+    expect(httpResponse).toEqual(ok(makeFakeAccount()));
+  });
 
-    expect(httpResponse).toEqual({
-      statusCode: 200,
-      body: {
-        name: 'João',
-      },
-    });
+  test('Should call LogErrorRepository with correct error if controller returns a server error', async () => {
+    const { logControllerDecorator, controllerStub, logErrorRepositoryStub } =
+      makeLogControllerDecorator();
+
+    const logSpy = jest.spyOn(logErrorRepositoryStub, 'log');
+
+    jest.spyOn(controllerStub, 'handle').mockReturnValueOnce(
+      new Promise(resolve => {
+        resolve(makeFakeServerError());
+      }),
+    );
+
+    await logControllerDecorator.handle(makeFakeRequest());
+
+    expect(logSpy).toHaveBeenCalledWith('any_stack');
   });
 });

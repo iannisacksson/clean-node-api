@@ -5,6 +5,17 @@ import { BcryptAdapter } from '../../infra/criptography/bcrypt-adapter';
 import { AccountMongoRepository } from '../../infra/db/mongodb/account-repository/account';
 import { IController } from '../../presentation/protocols';
 import { LogControllerDecorator } from '../dacorators/log';
+import { ILogErrorRepository } from '../../data/protocols/log-error-repository';
+
+const makeLogErrorRepository = (): ILogErrorRepository => {
+  class LogErrorRepositoryStub implements ILogErrorRepository {
+    public async log(): Promise<void> {
+      return null;
+    }
+  }
+
+  return new LogErrorRepositoryStub();
+};
 
 export const makeSignUpController = (): IController => {
   const salt = 12;
@@ -20,5 +31,5 @@ export const makeSignUpController = (): IController => {
     dbAddAccount,
   );
 
-  return new LogControllerDecorator(signUpController);
+  return new LogControllerDecorator(signUpController, makeLogErrorRepository());
 };
