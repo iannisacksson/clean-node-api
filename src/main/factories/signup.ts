@@ -6,10 +6,18 @@ import { AccountMongoRepository } from '../../infra/db/mongodb/account-repositor
 import { IController } from '../../presentation/protocols';
 import { LogControllerDecorator } from '../dacorators/log';
 import { LogMongoRepository } from '../../infra/db/mongodb/log-repository/log';
+import { IValidation } from '../../presentation/helpers/validators/validation';
+
+class Validation implements IValidation {
+  public validate(): Error {
+    return null;
+  }
+}
 
 export const makeSignUpController = (): IController => {
   const salt = 12;
   const emailValidatorAdapter = new EmailValidatorAdapter();
+  const validation = new Validation();
 
   const bcryptAdapter = new BcryptAdapter(salt);
   const accountMongoRepository = new AccountMongoRepository();
@@ -19,6 +27,7 @@ export const makeSignUpController = (): IController => {
   const signUpController = new SignUpController(
     emailValidatorAdapter,
     dbAddAccount,
+    validation,
   );
 
   const logMongoRepository = new LogMongoRepository();
