@@ -1,5 +1,9 @@
-// eslint-disable-next-line max-classes-per-file
-import { IAddAccount, IEmailValidator, IHttpRequest } from './signup-protocols';
+import {
+  IAddAccount,
+  IEmailValidator,
+  IHttpRequest,
+  IValidation,
+} from './signup-protocols';
 import {
   InvalidParamError,
   MissingParamError,
@@ -13,6 +17,7 @@ interface ISignUpControllerTypes {
   signUpController: SignUpController;
   emailValidatorStub: IEmailValidator;
   addAccountStub: IAddAccount;
+  validationStub: IValidation;
 }
 
 const makeEmailValidator = (): IEmailValidator => {
@@ -42,6 +47,16 @@ const makeAddAccount = (): IAddAccount => {
   return new AddAccountStub();
 };
 
+const makeValidation = (): IValidation => {
+  class ValidationStub implements IValidation {
+    public validate(): Error {
+      return null;
+    }
+  }
+
+  return new ValidationStub();
+};
+
 const makeFakeRequest = (): IHttpRequest => ({
   body: {
     name: 'any_name',
@@ -54,16 +69,19 @@ const makeFakeRequest = (): IHttpRequest => ({
 const makeSignUpController = (): ISignUpControllerTypes => {
   const emailValidatorStub = makeEmailValidator();
   const addAccountStub = makeAddAccount();
+  const validationStub = makeValidation();
 
   const signUpController = new SignUpController(
     emailValidatorStub,
     addAccountStub,
+    validationStub,
   );
 
   return {
     signUpController,
     emailValidatorStub,
     addAccountStub,
+    validationStub,
   };
 };
 
@@ -228,5 +246,17 @@ describe('SignUp Controller', () => {
     const httpResponse = await signUpController.handle(makeFakeRequest());
 
     expect(httpResponse).toEqual(ok(makeFakeAccount()));
+  });
+
+  test('should call Validation with correct values', async () => {
+    const { signUpController, validationStub } = makeSignUpController();
+
+    const validateSpy = jest.spyOn(validationStub, 'validate');
+
+    const httpRequest = makeFakeRequest();
+
+    signUpController.handle(httpRequest);
+
+    expect(validateSpy).toHaveBeenCalledWith(httpRequest.body);
   });
 });
