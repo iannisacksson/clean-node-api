@@ -5,7 +5,7 @@ import {
   IController,
   IValidation,
 } from './signup-protocols';
-import { badRequest, serverError, ok } from '../../helpers/http-helper';
+import { badRequest, serverError, ok } from '../../helpers/http/http-helper';
 
 class SignUpController implements IController {
   private readonly addAccount: IAddAccount;

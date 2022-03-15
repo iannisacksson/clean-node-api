@@ -2,7 +2,7 @@ import { IAddAccount, IHttpRequest, IValidation } from './signup-protocols';
 import { MissingParamError, ServerError } from '../../errors';
 import { SignUpController } from './signup';
 import { IAccountModel } from '../../../domain/models/account';
-import { ok, serverError, badRequest } from '../../helpers/http-helper';
+import { ok, serverError, badRequest } from '../../helpers/http/http-helper';
 
 interface ISignUpControllerTypes {
   signUpController: SignUpController;
