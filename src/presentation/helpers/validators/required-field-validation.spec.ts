@@ -9,4 +9,12 @@ describe('RequiredField Validation', () => {
 
     expect(error).toEqual(new MissingParamError('field'));
   });
+
+  test('Should not return if validation succeeds', () => {
+    const requiredFieldValidation = new RequiredFieldValidation('field');
+
+    const error = requiredFieldValidation.validate({ field: 'any_name' });
+
+    expect(error).toBeFalsy();
+  });
 });
