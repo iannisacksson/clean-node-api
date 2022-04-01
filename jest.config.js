@@ -1,4 +1,5 @@
 module.exports = {
+  roots: ['src'],
   clearMocks: true,
   collectCoverage: true,
   collectCoverageFrom: [
