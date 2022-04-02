@@ -1,5 +1,6 @@
 import { IAuthenticationModel } from '../../../domain/usecases/authentication';
 import { IHashComparer } from '../../protocols/criptography/hash-comparer';
+import { ITokenGenerator } from '../../protocols/criptography/token-generator';
 import { ILoadAccountByEmailRepository } from '../../protocols/db/load-account-by-email-repository';
 import { IAccountModel } from '../add-account/db-add-account-protocols';
 import { DbAuthentication } from './db-authentication';
@@ -8,6 +9,7 @@ interface ISutTypes {
   loadAccountByEmailRepositoryStub: ILoadAccountByEmailRepository;
   dbAuthentication: DbAuthentication;
   hashComparerStub: IHashComparer;
+  tokenGeneratorStub: ITokenGenerator;
 }
 
 const makeFakeAccount = (): IAccountModel => ({
@@ -44,18 +46,31 @@ const makeHashComparer = (): IHashComparer => {
   return new HashedComparerStub();
 };
 
+const makeTokenGenerator = (): ITokenGenerator => {
+  class TokenGeneratorStub implements ITokenGenerator {
+    async generate(): Promise<string> {
+      return 'any_token';
+    }
+  }
+
+  return new TokenGeneratorStub();
+};
+
 const makeSut = (): ISutTypes => {
   const loadAccountByEmailRepositoryStub = makeLoadAccountByEmailRepository();
   const hashComparerStub = makeHashComparer();
+  const tokenGeneratorStub = makeTokenGenerator();
   const dbAuthentication = new DbAuthentication(
     loadAccountByEmailRepositoryStub,
     hashComparerStub,
+    tokenGeneratorStub,
   );
 
   return {
     loadAccountByEmailRepositoryStub,
     dbAuthentication,
     hashComparerStub,
+    tokenGeneratorStub,
   };
 };
 
@@ -128,5 +143,15 @@ describe('DbAuthentication UseCase', () => {
     const accessToken = await dbAuthentication.auth(makeFakeAuthentication());
 
     expect(accessToken).toBeNull();
+  });
+
+  test('Should call TokenGenerator with correct id', async () => {
+    const { dbAuthentication, tokenGeneratorStub } = makeSut();
+
+    const generateSpy = jest.spyOn(tokenGeneratorStub, 'generate');
+
+    await dbAuthentication.auth(makeFakeAuthentication());
+
+    expect(generateSpy).toHaveBeenCalledWith('any_id');
   });
 });
