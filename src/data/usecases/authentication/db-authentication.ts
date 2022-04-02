@@ -24,21 +24,17 @@ export class DbAuthentication implements IAuthentication {
   public async auth(data: IAuthenticationModel): Promise<string> {
     const account = await this.loadAccountByEmailRepository.load(data.email);
 
-    if (!account) {
-      return null;
-    }
+    if (!account) return null;
 
     const isValid = await this.hashComparer.compare(
       data.password,
       account.password,
     );
 
-    if (!isValid) {
-      return null;
-    }
+    if (!isValid) return null;
 
-    await this.tokenGenerator.generate(account.id);
+    const accessToken = await this.tokenGenerator.generate(account.id);
 
-    return null;
+    return accessToken;
   }
 }
