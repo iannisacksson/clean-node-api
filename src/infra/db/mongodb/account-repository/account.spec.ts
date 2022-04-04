@@ -1,5 +1,8 @@
+import { Collection } from 'mongodb';
 import { MongoHelper } from '../helpers/mongo-helper';
 import { AccountMongoRepository } from './account';
+
+let accountCollection: Collection;
 
 describe('Account Mongo Repository', () => {
   beforeAll(async () => {
@@ -7,7 +10,7 @@ describe('Account Mongo Repository', () => {
   });
 
   beforeEach(async () => {
-    const accountCollection = await MongoHelper.getCollection('accounts');
+    accountCollection = await MongoHelper.getCollection('accounts');
 
     await accountCollection.deleteMany({});
   });
@@ -20,7 +23,7 @@ describe('Account Mongo Repository', () => {
     return new AccountMongoRepository();
   };
 
-  test('should return an account on success', async () => {
+  test('should return an account on add success', async () => {
     const accountMongoRepository = makeAccountMongoRepository();
 
     const account = await accountMongoRepository.add({
@@ -28,6 +31,22 @@ describe('Account Mongo Repository', () => {
       email: 'any_email',
       password: 'any_password',
     });
+
+    expect(account).toBeTruthy();
+    expect(account.id).toBeTruthy();
+    expect(account.email).toBe('any_email');
+    expect(account.password).toBe('any_password');
+  });
+
+  test('should return an account on loadByEmail success', async () => {
+    const accountMongoRepository = makeAccountMongoRepository();
+    await accountCollection.insertOne({
+      name: 'any_name',
+      email: 'any_email',
+      password: 'any_password',
+    });
+
+    const account = await accountMongoRepository.loadByEmail('any_email');
 
     expect(account).toBeTruthy();
     expect(account.id).toBeTruthy();
