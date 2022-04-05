@@ -1,6 +1,10 @@
-import { IAddAccount, IHttpRequest, IValidation } from './signup-protocols';
+import {
+  IAddAccount,
+  IHttpRequest,
+  IValidation,
+} from './signup-controller-protocols';
 import { MissingParamError, ServerError } from '../../errors';
-import { SignUpController } from './signup';
+import { SignUpController } from './signup-controller';
 import { IAccountModel } from '../../../domain/models/account';
 import { ok, serverError, badRequest } from '../../helpers/http/http-helper';
 

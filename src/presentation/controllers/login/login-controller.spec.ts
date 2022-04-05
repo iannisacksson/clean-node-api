@@ -5,8 +5,12 @@ import {
   serverError,
   unauthorized,
 } from '../../helpers/http/http-helper';
-import { IValidation, IAuthentication, IHttpRequest } from './login-protocols';
-import { LoginController } from './login';
+import {
+  IValidation,
+  IAuthentication,
+  IHttpRequest,
+} from './login-controller-protocols';
+import { LoginController } from './login-controller';
 
 interface ISutTypes {
   loginController: LoginController;

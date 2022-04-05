@@ -4,7 +4,7 @@ import {
   IHttpResponse,
   IController,
   IValidation,
-} from './signup-protocols';
+} from './signup-controller-protocols';
 import { badRequest, serverError, ok } from '../../helpers/http/http-helper';
 
 class SignUpController implements IController {
