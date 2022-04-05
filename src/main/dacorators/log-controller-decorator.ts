@@ -6,16 +6,10 @@ import {
 } from '../../presentation/protocols';
 
 class LogControllerDecorator implements IController {
-  private readonly controller: IController;
-  private readonly logErrorRepository: ILogErrorRepository;
-
   constructor(
-    controller: IController,
-    logErrorRepository: ILogErrorRepository,
-  ) {
-    this.controller = controller;
-    this.logErrorRepository = logErrorRepository;
-  }
+    private readonly controller: IController,
+    private readonly logErrorRepository: ILogErrorRepository,
+  ) {}
 
   public async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
     const httpResponse = await this.controller.handle(httpRequest);
