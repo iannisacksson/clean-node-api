@@ -6,11 +6,13 @@ import {
   IValidation,
 } from './signup-controller-protocols';
 import { badRequest, serverError, ok } from '../../helpers/http/http-helper';
+import { IAuthentication } from '../login/login-controller-protocols';
 
 class SignUpController implements IController {
   constructor(
     private readonly addAccount: IAddAccount,
     private readonly validation: IValidation,
+    private readonly authentication: IAuthentication,
   ) {}
 
   public async handle(httpRequest: IHttpRequest): Promise<IHttpResponse> {
@@ -28,6 +30,8 @@ class SignUpController implements IController {
         email,
         password,
       });
+
+      await this.authentication.auth({ email, password });
 
       return ok(account);
     } catch (error) {
